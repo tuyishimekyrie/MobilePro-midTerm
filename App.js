@@ -6,59 +6,64 @@ import WelcomeScreen from "./src/screens/WelcomeScreen";
 import Signup from "./src/screens/Signup";
 import About from "./src/screens/About";
 import Login from "./src/screens/Login";
+import QuizList from "./src/screens/QuizList";
 // import Forms from "./src/screens/forms";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import AccountNavigator from "./src/navigation/AccountNavigator";
+import AppNavigator from "./src/navigation/AppNavigator";
+import AdminNavigator from "./src/navigation/AdminNavigator";
+import AuthNavigator from "./src/navigation/AuthNavigator";
 
-const Stack = createNativeStackNavigator();
 
 function App() {
   return (
+    // <NavigationContainer>
+    //   <Stack.Navigator initialRouteName="Quiz">
+    //     <Stack.Screen
+    //       name="Welcome"
+    //       component={WelcomeScreen}
+    //       options={{ headerShown: false }}
+    //     />
+    //     <Stack.Screen
+    //       name="About"
+    //       component={About}
+    //       options={{
+    //         headerStyle: {
+    //           backgroundColor: "blue",
+    //         },
+    //         headerTintColor: "white",           }}
+    //     />
+    //     <Stack.Screen
+    //       name="Signup"
+    //       component={Signup}
+    //       options={{
+    //         headerStyle: {
+    //           backgroundColor: "#062141",
+    //         },
+    //         headerTintColor: "white",
+    //       }}
+    //     />
+    //     <Stack.Screen
+    //       name="Login"
+    //       component={Login}
+    //       options={{
+    //         headerStyle: {
+    //           backgroundColor: "#062141",
+    //         },
+    //         headerTintColor: "white",
+    //       }}
+    //     />
+    //     <Stack.Screen
+    //       name="Quiz"
+    //       component={QuizList}
+    //       options={{ headerShown: false }}
+    //     />
+    //   </Stack.Navigator>
+    // </NavigationContainer>
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Welcome">
-        {/* <Stack.Navigator> */}
-        {/* <Stack.Screen
-          name="Forms"
-          component={Forms}
-          options={{ headerShown: false }}
-        /> */}
-        <Stack.Screen
-          name="Welcome"
-          component={WelcomeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="About"
-          component={About}
-          // options={{ headerShown: false }}
-          options={{
-            headerStyle: {
-              backgroundColor: "blue", // Change the background color
-            },
-            headerTintColor: "white", // Change the text color
-          }}
-        />
-        <Stack.Screen
-          name="Signup"
-          component={Signup}
-          // options={{ headerShown: false }}
-          options={{
-            headerStyle: {
-              backgroundColor: "#062141", // Change the background color
-            },
-            headerTintColor: "white", // Change the text color
-          }}
-        />
-        <Stack.Screen
-          name="Login"
-          component={Login}
-          // options={{ headerShown: false }}
-          options={{
-            headerStyle: {
-              backgroundColor: "#062141", // Change the background color
-            },
-            headerTintColor: "white", // Change the text color
-          }}
-        />
-      </Stack.Navigator>
+      {/* <AccountNavigator /> */}
+      {/* <AdminNavigator /> */}
+      <AuthNavigator />
     </NavigationContainer>
   );
 }

@@ -1,6 +1,7 @@
 export default {
   primary: "#3730A3",
   secondary: "#1D4ED8",
+  bg: "#062141",
   black: "#000",
   white: "#fff",
   medium: "#132E4E",
