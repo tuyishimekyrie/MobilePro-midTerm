@@ -62,8 +62,8 @@ function App() {
     // </NavigationContainer>
     <NavigationContainer>
       {/* <AccountNavigator /> */}
-      {/* <AdminNavigator /> */}
-      <AuthNavigator />
+      <AdminNavigator />
+      {/* <AuthNavigator /> */}
     </NavigationContainer>
   );
 }

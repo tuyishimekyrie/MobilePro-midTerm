@@ -6,19 +6,20 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import QuizList from "../screens/QuizList";
 import colors from "../config/colors";
 import AdminQuizList from "../screens/AdminQuizList";
+import AdminQuizScreen from "../screens/AdminQuizScreen";
 
 
 const Stack = createNativeStackNavigator();
 
-export default function QuizNavigator() {
+export default function QuizAdminNavigator() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="AdminQuizList"
+        name="QuizList"
         component={AdminQuizList}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="QuizScreen" component={QuizScreen}   options={{
+      <Stack.Screen name="AdminQuizScreen" component={AdminQuizScreen}   options={{
           headerStyle: {
             backgroundColor: colors.bg,
           },

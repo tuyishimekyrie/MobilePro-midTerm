@@ -9,6 +9,7 @@ import colors from "../config/colors";
 import AdminQuizList from "../screens/AdminQuizList";
 import CreateQuizScreen from "../screens/CreateQuizScreen";
 import AppText from "../components/AppText";
+import QuizAdminNavigator from "./QuizAdminNavigator";
 
 
 const Tab = createBottomTabNavigator();
@@ -23,7 +24,7 @@ export default function AdminNavigator() {
     >
       <Tab.Screen
         name="AdminQuizList"
-        component={AdminQuizList}
+        component={QuizAdminNavigator}
         options={{
           headerShown:false,
           headerStyle: {

@@ -1,25 +1,13 @@
-import { View, Text, StyleSheet } from "react-native";
-import React from "react";
-import Screen from "../components/Screen";
-import AppText from "../components/AppText";
-import colors from "../config/colors";
-import { AppForm, AppFormField } from "../components/forms";
+import React from 'react';
+import {View, StyleSheet,Text} from 'react-native';
 
-export default function CreateQuizScreen() {
+const CreateQuizScreen = () => {
   return (
-    <Screen style={styles.container}>
-      <AppText style={styles.quizTitle}>Add Quiz</AppText>
-    </Screen>
+    <View>
+      <Text>Hello World</Text>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.bg,
-    flex: 1,
-    alignItems: "center",
-  },
-  quizTitle: {
-    color: colors.white,
-  },
-});
+
+export default CreateQuizScreen;
