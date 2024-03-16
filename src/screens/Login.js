@@ -13,15 +13,16 @@ const validationSchema = Yup.object().shape({
 
 const Login = () => {
   const navigation = useNavigation();
-  const handlePressLogIn = () => {
+  const handlePressLogIn = (values) => {
+    console.log(values)
     navigation.navigate("Login");
   };
   return (
     <Screen style={styles.container}>
       <Text style={styles.title}>Log In </Text>
       <AppForm
-        initialValues={{ name: "", email: "", password: "" }}
-        onSubmit={(values) => console.log(values)}
+        initialValues={{  email: "", password: "" }}
+        onSubmit={(values) => handlePressLogIn(values)}
         validationSchema={validationSchema}
       >
            
@@ -43,7 +44,7 @@ const Login = () => {
               autoCorrect={false}
               secureTextEntry
             />
-        <SubmitButton title="Log In" style={{ marginTop: 45 }} navigateWhere={handlePressLogIn} />
+        <SubmitButton title="Log In" style={{ marginTop: 45 }}  />
       </AppForm>
     </Screen>
   );

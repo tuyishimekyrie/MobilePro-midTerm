@@ -8,7 +8,9 @@ function SubmitButton({ title, navigateWhere, style }) {
 
   const handlePress = () => {
     handleSubmit(); // Submit the form
-    navigateWhere(); // Navigate to the specified destination
+    if (navigateWhere) { 
+      navigateWhere(); // Navigate to the specified destination
+    }
   };
 
   return <WelcomeBtn title={title} onPress={handlePress} style={style} />;

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl
 } from "react-native";
 import React, {useState,useEffect} from "react";
 import Screen from "../components/Screen";
@@ -21,6 +22,16 @@ export default function AdminQuizList() {
     const navigation = useNavigation();
  
   const [quizData, setQuizData] = useState([ ]);
+  const [refreshing, setRefreshing] = useState(false); // State to manage refreshing
+
+  const onRefresh = () => {
+    // Function to handle refresh
+    setRefreshing(true);
+    // You may perform any necessary operations here to update quizData
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000); // Simulating a delay to refresh data
+  };
 
   useEffect(() => {
     // Fetch quiz data when the component mounts
@@ -106,7 +117,7 @@ export default function AdminQuizList() {
     }, [])
   );
   const Item = ({ title,id }) => (
-    <ScrollView>
+    // <ScrollView>
       <View style={styles.item}>
         <TouchableOpacity onPress={() =>  navigation.navigate("AdminQuizScreen", {id,title}) } style={styles.iconsWrapper}>
           <Text style={styles.title}>{title}</Text>
@@ -120,20 +131,24 @@ export default function AdminQuizList() {
           </View>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    // </ScrollView>
   );
   return (
     <>
     <Screen style={styles.container}>
       <AppText style={styles.headtitle}>List Of Quiz</AppText>
-      <View>
+      <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      } // Integrating RefreshControl
+    >
         <FlatList
           style={styles.containerBottom}
           data={quizData}
           renderItem={({ item }) => <Item title={item.title} id={item.id} />}
           keyExtractor={(item) => item.id}
         />
-      </View>
+      </ScrollView>
     </Screen>
     </>
   );
