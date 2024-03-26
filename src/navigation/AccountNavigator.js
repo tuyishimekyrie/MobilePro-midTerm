@@ -8,9 +8,14 @@ import WelcomeScreen from "../screens/WelcomeScreen";
 import colors from "../config/colors";
 import AppText from "../components/AppText";
 import QuizNavigator from "./QuizNavigator";
+import { useUser } from "../context/UserContext";
 
 const Tab = createBottomTabNavigator();
 export default function AppNavigator() {
+      const { setUser } = useUser();
+      const handleLogout = () => {
+        setUser(null); // Clear the user context
+      };
   return (
     <Tab.Navigator
       screenOptions={{
@@ -52,7 +57,7 @@ export default function AppNavigator() {
         component={WelcomeScreen}
         options={({ navigation }) => ({
           tabBarButton: () => (
-            <TouchableOpacity onPress={() => console.log('clicked')}>
+            <TouchableOpacity onPress={() => handleLogout()}>
               <View style={styles.logout}>
                 <MaterialCommunityIcons name="logout" size={22} color={colors.light} />
                 <AppText style={styles.logoutText}>Logout</AppText>

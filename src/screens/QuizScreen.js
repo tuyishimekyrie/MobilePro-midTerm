@@ -1,52 +1,69 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import colors from "../config/colors";
 import CheckBox from "expo-checkbox";
 import WelcomeBtn from "../components/button/welcome";
 import { useNavigation } from "@react-navigation/native";
+import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp } from "firebase/firestore";
+import { db } from "../../firebase";
+import { UserContext } from "../context/UserContext";
 
 const QuizScreen = ({ route }) => {
-  const { title } = route.params;
+  const { id, title } = route.params;
+    const { user } = useContext(UserContext); // Access user and role from context
+    console.log(user);
   const navigation = useNavigation();
 
-  // Sample quiz data (replace with your own)
-  const quizData = [
-    {
-      id: 1,
-      question: "What is TypeScript?",
-      options: ["A superset of JavaScript", "A programming language", "A framework for building UIs", "A testing library"],
-      correctAnswerIndex: 0, // Correct answer index should be 0 (first option)
-    },
-    {
-      id: 2,
-      question: "What is React Native?",
-      options: ["A framework for building UIs", "A programming language", "A database management system", "A testing library"],
-      correctAnswerIndex: 0, // Correct answer index should be 0 (first option)
-    },
-    // Add more questions here
-  ];
-
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptionIndex, setSelectedOptionIndex] = useState(null);
   const [score, setScore] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const currentQuestion = quizData[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === quizData.length - 1;
+
+ useEffect(() => {
+   const fetchQuestions = async () => {
+     try {
+       const docRef = doc(db, "quizzes", id); // Reference to the quiz document
+       const docSnap = await getDoc(docRef);
+       if (docSnap.exists()) {
+         const fetchedQuestions = docSnap.data().questions; // Assuming questions is an array field in the quiz document
+         setQuestions(fetchedQuestions);
+         console.log(questions)
+         setLoading(false);
+       } else {
+         console.log("No such document!");
+         setLoading(false);
+       }
+     } catch (error) {
+       console.error("Error fetching questions:", error);
+       setLoading(false);
+     }
+   };
+
+   fetchQuestions();
+ }, [id]);
+
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   const handleOptionSelection = (index) => {
     setSelectedOptionIndex(index);
   };
 
   const handleNextQuestion = () => {
-    const correctAnswerIndex = currentQuestion.correctAnswerIndex;
+    // const correctAnswerIndex = currentQuestion.correctAnswerIndex;
+    const correctAnswerIndex = currentQuestion.correctAnswer - 1;
+
 
     if (selectedOptionIndex !== null) {
       if (selectedOptionIndex === correctAnswerIndex) {
         setScore(score + 1);
       }
 
-      if (currentQuestionIndex < quizData.length - 1) {
+      if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       } else {
         setIsModalVisible(true);
@@ -54,49 +71,83 @@ const QuizScreen = ({ route }) => {
 
       setSelectedOptionIndex(null);
     } else {
-      // Provide feedback to the user that an option must be selected before moving to the next question
       alert("Please select an option before moving to the next question.");
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalVisible(false);
-    navigation.navigate("QuizList");
-  };
+
+    const handleCloseModal = async () => {
+      // Assuming you have a way to get the current user ID (e.g., currentUser.uid)
+      const userId = user.uid; // Replace currentUser.uid with actual user ID
+      try {
+        // Add the score to the "scores" collection
+        await addDoc(collection(db, "scores"), {
+          userId: userId,
+          quizId: id,
+          score: score,
+          createdAt: serverTimestamp(), // Add timestamp when the score is recorded
+        });
+        console.log("Score added successfully!");
+      } catch (error) {
+        console.error("Error adding score:", error);
+      }
+      setIsModalVisible(false);
+      navigation.navigate("QuizList");
+    };
+
+
+  if (loading || questions.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.question}>{currentQuestion.question}</Text>
-      {currentQuestion.options.map((option, index) => (
-        <View key={index} style={styles.optionContainer}>
-          <CheckBox
-            style={styles.checkbox}
-            value={selectedOptionIndex === index}
-            onValueChange={() => handleOptionSelection(index)}
-            color={colors.primary}
+      {currentQuestion ? (
+        <>
+          <Text style={styles.question}>{currentQuestion.question}</Text>
+          {currentQuestion.options.map((option, index) => (
+            <View key={index} style={styles.optionContainer}>
+              <CheckBox
+                style={styles.checkbox}
+                value={selectedOptionIndex === index}
+                onValueChange={() => handleOptionSelection(index)}
+                color={colors.primary}
+              />
+              <Text style={styles.optionText}>{option}</Text>
+            </View>
+          ))}
+          <WelcomeBtn
+            title={isLastQuestion ? "Submit" : "Next"}
+            onPress={handleNextQuestion}
           />
-          <Text style={styles.optionText}>{option}</Text>
-        </View>
-      ))}
-      <WelcomeBtn title={isLastQuestion ? "Submit" : "Next"} onPress={handleNextQuestion} />
 
-      {/* Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>You scored {score}!</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={handleCloseModal}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isModalVisible}
+            onRequestClose={() => setIsModalVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalText}>You scored {score}!</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={handleCloseModal}
+                >
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        </>
+      ) : (
+        <Text>No questions found for this quiz.</Text>
+      )}
     </View>
   );
 };

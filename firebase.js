@@ -2,7 +2,6 @@ import { initializeApp } from "@firebase/app"; // Import initializeApp from the 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeAuth, getReactNativePersistence } from "@firebase/auth";
 import { getFirestore, collection, addDoc } from "@firebase/firestore";
-
 const firebaseConfig = {
   apiKey: "AIzaSyDsZp9fHof3_U7SJsT29eNYMo7_H_YoV2Y",
   authDomain: "mobilequizapp-e9082.firebaseapp.com",
@@ -17,5 +16,6 @@ export const app = initializeApp(firebaseConfig);
 export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
+export const firestore = getFirestore(app);
 
 export const db = getFirestore(app);

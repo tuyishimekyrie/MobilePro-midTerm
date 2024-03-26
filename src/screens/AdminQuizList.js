@@ -1,156 +1,98 @@
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  RefreshControl
+  RefreshControl,
+  Alert,
 } from "react-native";
-import React, {useState,useEffect} from "react";
 import Screen from "../components/Screen";
-import AppText from "../components/AppText";
 import colors from "../config/colors";
-import {useNavigation,useFocusEffect} from "@react-navigation/native"
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import QuizScreen from "./QuizScreen";
-import {NavigationContainer} from "@react-navigation/native"
-import {MaterialCommunityIcons} from "@expo/vector-icons"
+import { useNavigation } from "@react-navigation/native";
+import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { db } from "../../firebase";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+
 
 export default function AdminQuizList() {
-
-    const navigation = useNavigation();
- 
-  const [quizData, setQuizData] = useState([ ]);
-  const [refreshing, setRefreshing] = useState(false); // State to manage refreshing
-
-  const onRefresh = () => {
-    // Function to handle refresh
-    setRefreshing(true);
-    // You may perform any necessary operations here to update quizData
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000); // Simulating a delay to refresh data
+  const navigation = useNavigation();
+  const [quizData, setQuizData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+console.log(quizData.quizTitle)
+  const fetchQuizData = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "quizzes"));
+      const fetchedQuizData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setQuizData(fetchedQuizData);
+    } catch (error) {
+      console.error("Error fetching quiz data:", error);
+    }
   };
 
   useEffect(() => {
-    // Fetch quiz data when the component mounts
     fetchQuizData();
   }, []);
-
-  const fetchQuizData = () => {
-    const fetchedQuizData = [
-     {
-    id: 1,
-    title: "Introduction to TypeScript",
-    description: "Learn the basics of TypeScript programming language.",
-    numberOfQuestions: 5,
-  },
-  {
-    id: 2,
-    title: "Introduction to Docker",
-    description: "Learn the fundamentals of Docker containerization.",
-    numberOfQuestions: 10,
-  },
-  {
-    id: 3,
-    title: "React Hooks",
-    description: "Explore React's Hooks API for state and side effects.",
-    numberOfQuestions: 8,
-  },
-  {
-    id: 4,
-    title: "Node.js Fundamentals",
-    description: "Learn the core concepts of Node.js for backend development.",
-    numberOfQuestions: 12,
-  },
-  {
-    id: 5,
-    title: "HTML Basics",
-    description: "Understand the fundamentals of HTML markup language.",
-    numberOfQuestions: 7,
-  },
-  {
-    id: 6,
-    title: "CSS Styling",
-    description: "Master the art of styling web pages using CSS.",
-    numberOfQuestions: 9,
-  },
-  {
-    id: 7,
-    title: "JavaScript Essentials",
-    description: "Explore the essential concepts of JavaScript programming language.",
-    numberOfQuestions: 15,
-  },
-  {
-    id: 8,
-    title: "Python Basics",
-    description: "Learn the basics of Python programming language.",
-    numberOfQuestions: 10,
-  },
-  {
-    id: 9,
-    title: "SQL Fundamentals",
-    description: "Understand the fundamentals of SQL for database management.",
-    numberOfQuestions: 10,
-  },
-  {
-    id: 10,
-    title: "Algorithms and Data Structures",
-    description: "Study the fundamental algorithms and data structures.",
-    numberOfQuestions: 20,
-  }
-    ];
-    setQuizData(fetchedQuizData);
+ const handleDeleteQuiz = async (id) => {
+   try {
+     await deleteDoc(doc(db, "quizzes", id));
+     Alert.alert("Success", "Quiz deleted successfully");
+     await fetchQuizData(); // Refresh the quiz list after deletion
+   } catch (error) {
+     console.error("Error deleting quiz:", error);
+     Alert.alert("Error", "An error occurred while deleting the quiz");
+   }
+ };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchQuizData();
+    setRefreshing(false);
   };
 
-  const handleDeleteQuiz = (id) => {
-    // Filter out the quiz with the specified ID
-    const updatedQuizData = quizData.filter((quiz) => quiz.id !== id);
-    setQuizData(updatedQuizData);
-  };
-
-   // Use the useFocusEffect hook to refetch quiz data whenever the screen gains focus
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchQuizData();
-    }, [])
-  );
-  const Item = ({ title,id }) => (
-    // <ScrollView>
-      <View style={styles.item}>
-        <TouchableOpacity onPress={() =>  navigation.navigate("AdminQuizScreen", {id,title}) } style={styles.iconsWrapper}>
-          <Text style={styles.title}>{title}</Text>
-          <View style={styles.iconsHolder}>
-            <TouchableOpacity onPress={() => console.log("clicked edit icon")}>
-          <MaterialCommunityIcons name="pencil" size={30} color={colors.secondary} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDeleteQuiz(id)}>
-          <MaterialCommunityIcons name="trash-can-outline" size={30} color="red" />
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </View>
-    // </ScrollView>
-  );
+ const renderQuizItem = ({ item }) => (
+   <TouchableOpacity
+     onPress={() =>
+       navigation.navigate("AdminQuizScreen", {
+         quizId: item.id,
+         title: item.quizTitle,
+       })
+     }
+     style={styles.item}
+   >
+     <Text style={styles.title}>{item.quizTitle}</Text>
+     <View style={styles.iconsHolder}>
+       <TouchableOpacity onPress={() => console.log("clicked edit icon")}>
+         <MaterialCommunityIcons
+           name="pencil"
+           size={30}
+           color={colors.secondary}
+         />
+       </TouchableOpacity>
+       <TouchableOpacity onPress={() => handleDeleteQuiz(item.id)}>
+         <MaterialCommunityIcons
+           name="trash-can-outline"
+           size={30}
+           color="red"
+         />
+       </TouchableOpacity>
+     </View>
+   </TouchableOpacity>
+ );
   return (
-    <>
     <Screen style={styles.container}>
-      <AppText style={styles.headtitle}>List Of Quiz</AppText>
-      <ScrollView
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      } // Integrating RefreshControl
-    >
-        <FlatList
-          style={styles.containerBottom}
-          data={quizData}
-          renderItem={({ item }) => <Item title={item.title} id={item.id} />}
-          keyExtractor={(item) => item.id}
-        />
-      </ScrollView>
+      <FlatList
+        data={quizData}
+        renderItem={renderQuizItem}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
     </Screen>
-    </>
   );
 }
 const styles = StyleSheet.create({
@@ -167,6 +109,9 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
     borderRadius: 5,
+    flex: 1,
+    flexDirection:"row",
+    alignItems:"center"
   },
   title: {
     color: colors.white,
@@ -182,15 +127,16 @@ const styles = StyleSheet.create({
     marginBottom: 100,
   },
   iconsWrapper: {
-    flex:1,
-    flexDirection:"row",
+    flex: 1,
+    flexDirection: "row",
     justifyContent: "space-between",
     gap: 40,
   },
   iconsHolder: {
     flex: 1,
     flexDirection: "row",
-    justifyContent:"flex-end",
-    gap: 10
-  }
+    justifyContent: "flex-end",
+    gap: 10,
+  },
 });
+

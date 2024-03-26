@@ -7,10 +7,10 @@ const WelcomeScreen = () => {
   const navigation = useNavigation();
 
   const handleSignUpPress = () => {
-    navigation.navigate("Signup"); // Navigate to the SignUp screen
+    navigation.navigate("Signup"); 
   };
     const handleLogInPress = () => {
-      navigation.navigate("Login"); // Navigate to the LogIN screen
+      navigation.navigate("Login");
     };
   return (
     <View style={styles.container}>
@@ -38,11 +38,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
     width: "100%",
-    // alignItems: "center",
+   
   },
   image: {
-    width: 400, // Adjust width as needed
-    height: 500, // Adjust height as needed
+    width: 400, 
+    height: 500, 
     marginBottom: 30,
   },
 });

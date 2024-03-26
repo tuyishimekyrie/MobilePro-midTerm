@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text ,Alert} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
@@ -36,20 +36,47 @@ const Signup = () => {
         name: name,
         email: email,
         password: password,
+        Role:"user"
       });
       // You can add additional user data to firestore or other database here if needed
       console.log("User signed up successfully!", user);
       // Navigate to home screen after successful signup
+       navigation.navigate("Login");
     } catch (error) {
-      setError(error.message);
-      setTimeout(() => {
-        setError("");
-      }, 5000);
-      console.error("Error signing up:", error.message);
+       if (error.code === "auth/email-already-in-use") {
+         // Show alert indicating email is already in use
+         Alert.alert(
+           "Email Already in Use",
+           "The email provided is already registered. Would you like to log in instead?",
+           [
+             {
+               text: "Cancel",
+               style: "cancel",
+             },
+             {
+               text: "Log In",
+               onPress: () => navigation.navigate("Login"),
+             },
+           ]
+         );
+       } else {
+         setError(error.message);
+         setTimeout(() => {
+           setError("");
+         }, 5000);
+         console.error("Error signing up:", error.message);
+         // Handle other errors, e.g., display error message to the user
+       }
+
+      // setError(error.message);
+      // setTimeout(() => {
+      //   setError("");
+      // }, 5000);
+      // console.error("Error signing up:", error.message);
       // Handle error, e.g., display error message to the user
     }
-    console.log(values);
-    navigation.navigate("Signup");
+    // console.log(values);
+    // navigation.navigate("Login");
   };
   return (
     <Screen style={styles.container}>
@@ -94,16 +121,13 @@ const Signup = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // justifyContent: "center",
     backgroundColor: "#062141",
-    // alignItems: "center",
-    // width: "100%",
     padding: 20,
   },
   title: {
     color: "#fff",
     fontSize: 40,
-    paddingLeft: 100,
+    paddingLeft: 80,
     paddingBottom: 50,
   },
   inputs: {
@@ -134,7 +158,6 @@ const styles = StyleSheet.create({
   welcomeBtnWrapper: {
     display: "flex",
     justifyContent: "center",
-    // alignItems: "center",
     flexDirection: "column",
 
     gap: 10,

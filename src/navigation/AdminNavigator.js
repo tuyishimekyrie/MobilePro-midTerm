@@ -64,23 +64,7 @@ export default function AdminNavigator() {
           ),
         }}
       />
-       <Tab.Screen
-        name="Logout"
-        component={WelcomeScreen}
-        options={({ navigation }) => ({
-          tabBarButton: () => (
-            <TouchableOpacity onPress={() => console.log('clicked')}>
-              <View style={styles.logout}>
-                <MaterialCommunityIcons name="logout" size={22} color={colors.light} />
-                <AppText style={styles.logoutText}>Logout</AppText>
-              </View>
-            </TouchableOpacity>
-          ),
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="logout" color={color} size={size} />
-          ),
-        })}
-      />
+      
     </Tab.Navigator>
   );
 }

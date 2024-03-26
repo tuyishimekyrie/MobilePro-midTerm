@@ -1,18 +1,27 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView,RefreshControl } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import colors from "../config/colors";
 import { SubmitButton, AppForm, AppFormField } from "../components/forms";
 import { useNavigation } from "@react-navigation/native";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "../../firebase";
 
 export default function CreateQuizScreen() {
   const navigation = useNavigation();
-  const defaultQuestion = { text: "", options: ["", ""] };
+  const defaultQuestion = { text: "", options: ["", ""], correctAnswer: "" };
   const [quizData, setQuizData] = useState({
     quizTitle: "",
     numberOfQuestions: 1,
-    questions: [{ text: "", options: ["", ""] }]
+    questions: [{ ...defaultQuestion }],
   });
   const [refreshing, setRefreshing] = useState(false); // State to manage refreshing
 
@@ -20,13 +29,13 @@ export default function CreateQuizScreen() {
     // Function to handle refresh
     setRefreshing(true);
     // Reset options to default state
-    const resetQuestions = quizData.questions.map(question => ({
+    const resetQuestions = quizData.questions.map((question) => ({
       ...question,
-      options: ["", ""]
+      options: ["", ""],
     }));
-    setQuizData(prevState => ({
+    setQuizData((prevState) => ({
       ...prevState,
-      questions: resetQuestions
+      questions: resetQuestions,
     }));
     setTimeout(() => {
       setRefreshing(false);
@@ -34,41 +43,63 @@ export default function CreateQuizScreen() {
   };
 
   const handleAddQuestion = () => {
-    setQuizData(prevState => ({
+    setQuizData((prevState) => ({
       ...prevState,
       numberOfQuestions: prevState.numberOfQuestions + 1,
-      questions: [...prevState.questions, { text: "", options: ["", ""] }]
+      questions: [...prevState.questions, { ...defaultQuestion }],
     }));
   };
 
   const handleChangeQuestion = (text, questionIndex) => {
     const newQuestions = [...quizData.questions];
-    newQuestions[questionIndex] = { ...newQuestions[questionIndex], text };
-    setQuizData(prevState => ({
+    newQuestions[questionIndex].text = text;
+    setQuizData((prevState) => ({
       ...prevState,
-      questions: newQuestions
+      questions: newQuestions,
+    }));
+  };
+
+  const handleChangeCorrectAnswer = (text, questionIndex) => {
+    const newQuestions = [...quizData.questions];
+    newQuestions[questionIndex].correctAnswer = text;
+    setQuizData((prevState) => ({
+      ...prevState,
+      questions: newQuestions,
     }));
   };
 
   const handleChangeOption = (text, questionIndex, optionIndex) => {
     const newQuestions = [...quizData.questions];
     newQuestions[questionIndex].options[optionIndex] = text;
-    setQuizData(prevState => ({
+    setQuizData((prevState) => ({
       ...prevState,
-      questions: newQuestions
-    }));
-  };
-  const handleAddOption = (questionIndex) => {
-    const newQuestions = [...quizData.questions];
-    newQuestions[questionIndex].options.push(""); // Add an empty option
-    setQuizData(prevState => ({
-      ...prevState,
-      questions: newQuestions
+      questions: newQuestions,
     }));
   };
 
-  const handleSubmit = () => {
+  const handleAddOption = (questionIndex) => {
+    const newQuestions = [...quizData.questions];
+    newQuestions[questionIndex].options.push(""); // Add an empty option
+    setQuizData((prevState) => ({
+      ...prevState,
+      questions: newQuestions,
+    }));
+  };
+
+  const handleSubmit = async() => {
     console.log(quizData);
+    // Logic to submit quiz data to Firestore or wherever needed
+    try {
+      // Add quizData to Firestore
+      const docRef = await addDoc(collection(db, "quizzes"), {
+        ...quizData,
+        createdAt: serverTimestamp() // Add timestamp when the quiz is created
+      });
+      console.log("Quiz added with ID: ", docRef.id);
+      navigation.navigate("AdminQuizList"); // Navigate to the list of quizzes after adding
+    } catch (error) {
+      console.error("Error adding quiz: ", error);
+    }
   };
 
   const handleNavigateWhere = () => {
@@ -88,14 +119,18 @@ export default function CreateQuizScreen() {
           autoCapitalize="none"
         />
         <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} // Integrating RefreshControl
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           {quizData.questions.map((question, questionIndex) => (
             <View key={questionIndex}>
               <AppFormField
                 placeholder={`Question ${questionIndex + 1}`}
                 value={question.text}
-                onChangeText={(text) => handleChangeQuestion(text, questionIndex)}
+                onChangeText={(text) =>
+                  handleChangeQuestion(text, questionIndex)
+                }
                 autoCorrect={false}
                 autoCapitalize="none"
               />
@@ -104,21 +139,38 @@ export default function CreateQuizScreen() {
                   key={optionIndex}
                   placeholder={`Option ${optionIndex + 1}`}
                   value={option}
-                  onChangeText={(text) => handleChangeOption(text, questionIndex, optionIndex)}
+                  onChangeText={(text) =>
+                    handleChangeOption(text, questionIndex, optionIndex)
+                  }
                   autoCorrect={false}
                   autoCapitalize="none"
                 />
               ))}
-              <TouchableOpacity onPress={() => handleAddOption(questionIndex)} style={styles.addOptionButton}>
+              <TouchableOpacity
+                onPress={() => handleAddOption(questionIndex)}
+                style={styles.addOptionButton}
+              >
                 <Text style={styles.addOptionButtonText}>Add Option</Text>
               </TouchableOpacity>
+              <AppFormField
+                placeholder="Correct Answer" // Input for correct numerical answer
+                value={question.correctAnswer}
+                onChangeText={(text) =>
+                  handleChangeCorrectAnswer(text, questionIndex)
+                }
+                autoCorrect={false}
+                autoCapitalize="none"
+                keyboardType="numeric" // Set keyboardType to numeric for numerical input
+              />
             </View>
           ))}
         </ScrollView>
         <TouchableOpacity onPress={handleAddQuestion} style={styles.addButton}>
           <Text style={styles.addButtonText}>Add Question</Text>
         </TouchableOpacity>
-        <AppText style={styles.numberOfQuestions}>Total Questions: {quizData.numberOfQuestions}</AppText>
+        <AppText style={styles.numberOfQuestions}>
+          Total Questions: {quizData.numberOfQuestions}
+        </AppText>
         <SubmitButton title="Submit" navigateWhere={handleNavigateWhere} />
       </AppForm>
     </Screen>
@@ -152,7 +204,7 @@ const styles = StyleSheet.create({
   },
   numberOfQuestions: {
     color: colors.white,
-    alignSelf: "center"
+    alignSelf: "center",
   },
   addOptionButton: {
     backgroundColor: colors.primary,
@@ -162,7 +214,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: "center",
     alignSelf: "flex-start",
-    marginLeft: 10
+    marginLeft: 10,
   },
   addOptionButtonText: {
     color: colors.white,

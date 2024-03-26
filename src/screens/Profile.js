@@ -5,25 +5,39 @@ import AppText from '../components/AppText'
 import {MaterialCommunityIcons} from '@expo/vector-icons'
 import WelcomeBtn from '../components/button/welcome'
 import colors from '../config/colors'
+import { useUser } from "../context/UserContext";
 
 export default function Profile() {
-  return (
-    <Screen style={styles.container}>
+    const { setUser } = useUser();
+    // Function to handle logout
+    const handleLogout = () => {
+      setUser(null); // Clear the user context
+      // Navigate to the login or welcome screen after logout
+      // You can use navigation functions here if needed
+    };
+    return (
+      <Screen style={styles.container}>
         <AppText style={styles.wordColors}>User Profile</AppText>
-        <MaterialCommunityIcons name="account" size={50} color={colors.white}/>
+        <MaterialCommunityIcons name="account" size={50} color={colors.white} />
         <View>
-            <View style={styles.wordWrapper}>
-                <AppText style={styles.wordColors}>Email:</AppText>
-                <AppText style={styles.wordColors}>tuyishimehope01@gmail.com</AppText>
-            </View>
-            <View style={styles.wordWrapper}>
-                <AppText style={styles.wordColors}>Role:</AppText>
-                <AppText style={styles.wordColors}>user</AppText>
-            </View>
-            <WelcomeBtn title="Log Out"  style={styles.btn}/>
+          <View style={styles.wordWrapper}>
+            <AppText style={styles.wordColors}>Email:</AppText>
+            <AppText style={styles.wordColors}>
+              tuyishimehope01@gmail.com
+            </AppText>
+          </View>
+          <View style={styles.wordWrapper}>
+            <AppText style={styles.wordColors}>Role:</AppText>
+            <AppText style={styles.wordColors}>Admin</AppText>
+          </View>
+          <WelcomeBtn
+            title="Log Out"
+            style={styles.btn}
+            onPress={() => handleLogout()}
+          />
         </View>
-    </Screen>
-  )
+      </Screen>
+    );
 }
 const styles = StyleSheet.create({
     container: {
