@@ -12,6 +12,7 @@ const WelcomeScreen = () => {
     const handleLogInPress = () => {
       navigation.navigate("Login");
     };
+    
   return (
     <View style={styles.container}>
       <Image

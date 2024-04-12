@@ -4,14 +4,21 @@ import colors from "../config/colors";
 import CheckBox from "expo-checkbox";
 import WelcomeBtn from "../components/button/welcome";
 import { useNavigation } from "@react-navigation/native";
-import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 import { UserContext } from "../context/UserContext";
 
 const QuizScreen = ({ route }) => {
   const { id, title } = route.params;
-    const { user } = useContext(UserContext); // Access user and role from context
-    console.log(user);
+  const { user } = useContext(UserContext); // Access user and role from context
+  console.log(user);
   const navigation = useNavigation();
 
   const [questions, setQuestions] = useState([]);
@@ -21,30 +28,28 @@ const QuizScreen = ({ route }) => {
   const [score, setScore] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const docRef = doc(db, "quizzes", id); // Reference to the quiz document
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const fetchedQuestions = docSnap.data().questions; // Assuming questions is an array field in the quiz document
+          setQuestions(fetchedQuestions);
+          console.log(questions);
+          setLoading(false);
+        } else {
+          console.log("No such document!");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        setLoading(false);
+      }
+    };
 
- useEffect(() => {
-   const fetchQuestions = async () => {
-     try {
-       const docRef = doc(db, "quizzes", id); // Reference to the quiz document
-       const docSnap = await getDoc(docRef);
-       if (docSnap.exists()) {
-         const fetchedQuestions = docSnap.data().questions; // Assuming questions is an array field in the quiz document
-         setQuestions(fetchedQuestions);
-         console.log(questions)
-         setLoading(false);
-       } else {
-         console.log("No such document!");
-         setLoading(false);
-       }
-     } catch (error) {
-       console.error("Error fetching questions:", error);
-       setLoading(false);
-     }
-   };
-
-   fetchQuestions();
- }, [id]);
-
+    fetchQuestions();
+  }, [id]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -56,7 +61,6 @@ const QuizScreen = ({ route }) => {
   const handleNextQuestion = () => {
     // const correctAnswerIndex = currentQuestion.correctAnswerIndex;
     const correctAnswerIndex = currentQuestion.correctAnswer - 1;
-
 
     if (selectedOptionIndex !== null) {
       if (selectedOptionIndex === correctAnswerIndex) {
@@ -75,31 +79,29 @@ const QuizScreen = ({ route }) => {
     }
   };
 
-
-    const handleCloseModal = async () => {
-      // Assuming you have a way to get the current user ID (e.g., currentUser.uid)
-      const userId = user.uid; // Replace currentUser.uid with actual user ID
-      try {
-        // Add the score to the "scores" collection
-        await addDoc(collection(db, "scores"), {
-          userId: userId,
-          quizId: id,
-          score: score,
-          createdAt: serverTimestamp(), // Add timestamp when the score is recorded
-        });
-        console.log("Score added successfully!");
-      } catch (error) {
-        console.error("Error adding score:", error);
-      }
-      setIsModalVisible(false);
-      navigation.navigate("QuizList");
-    };
-
+  const handleCloseModal = async () => {
+    // Assuming you have a way to get the current user ID (e.g., currentUser.uid)
+    const userId = user.uid; // Replace currentUser.uid with actual user ID
+    try {
+      // Add the score to the "scores" collection
+      await addDoc(collection(db, "scores"), {
+        userId: userId,
+        quizId: id,
+        score: score,
+        createdAt: serverTimestamp(), // Add timestamp when the score is recorded
+      });
+      console.log("Score added successfully!");
+    } catch (error) {
+      console.error("Error adding score:", error);
+    }
+    setIsModalVisible(false);
+    navigation.navigate("QuizList");
+  };
 
   if (loading || questions.length === 0) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={styles.loading}>Loading...</Text>
       </View>
     );
   }
@@ -157,6 +159,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
     padding: 20,
+  },
+  loading:{
+    textAlign:"center",
+    color: "#fff",
+    fontSize:20
   },
   title: {
     fontSize: 24,

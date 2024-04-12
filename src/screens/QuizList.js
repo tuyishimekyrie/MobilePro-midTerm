@@ -19,10 +19,10 @@ export default function QuizList() {
 
   useEffect(() => {
     // Enable offline persistence
-    async function enableOfflinePersistence() {
-      await setPersistenceEnabled(true);
-    }
-    enableOfflinePersistence();
+    // async function enableOfflinePersistence() {
+    //   await setPersistenceEnabled(true);
+    // }
+    // enableOfflinePersistence();
 
     const fetchQuizData = async () => {
       try {
@@ -71,7 +71,7 @@ export default function QuizList() {
   if (loading) {
     return (
       <Screen style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={styles.loading}>Loading...</Text>
       </Screen>
     );
   }
@@ -93,6 +93,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
     justifyContent: "center",
+    color: "#fff"
+  },
+  loading:{
+    color:"#fff",
+    fontSize:15,
+    textAlign:"center"
   },
   flatListContent: {
     paddingVertical: 10,

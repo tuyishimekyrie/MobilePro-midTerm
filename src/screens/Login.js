@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { StyleSheet, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Screen from "../components/Screen";
-import { signInWithEmailAndPassword } from "@firebase/auth";
+import { signInWithEmailAndPassword,onAuthStateChanged } from "@firebase/auth";
 import { auth } from "../../firebase";
 import {db}  from "../../firebase";
 import * as Yup from "yup";
@@ -46,6 +46,7 @@ const Login = () => {
       // setUser({ ...authUser, role: "user" });
       // Check if the email is "tuyishimehope0@gmail.com"
       if (values.email === "tuyishimehope0@gmail.com") {
+
         // If yes, set the user role to "admin"
         setUser({ ...authUser, role: "admin" });
       } else {
@@ -68,6 +69,27 @@ const Login = () => {
       console.error("Error logging in:", error.message);
     }
   };
+
+  
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in, navigate to the Home screen
+        if (user.email === "tuyishimehope0@gmail.com") {
+
+          // If yes, set the user role to "admin"
+          setUser({ user, role: "admin" });
+          console.log(user)
+        } else {
+          // If not, set the user role to "user"
+          setUser({ user, role: "user" });
+        }
+        // navigation.navigate("Home");
+      }
+    });
+
+    return unsubscribe;
+  }, []);
   return (
     <Screen style={styles.container}>
       <Text style={styles.title}>Log In </Text>

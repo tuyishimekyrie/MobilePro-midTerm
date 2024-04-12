@@ -14,13 +14,15 @@ import { useNavigation } from "@react-navigation/native";
 import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
+import SQLiteTestComponent from "../components/SQLiteTestComponent";
+import CreateQuizTest from "../components/createQuizTest";
 
 export default function AdminQuizList() {
   const navigation = useNavigation();
   const [quizData, setQuizData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-console.log(quizData.quizTitle)
+  // console.log(quizData)
+  // console.log(quizData[0].questions[0].options);
   const fetchQuizData = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "quizzes"));
@@ -30,58 +32,78 @@ console.log(quizData.quizTitle)
       }));
       setQuizData(fetchedQuizData);
     } catch (error) {
-      console.error("Error fetching quiz data:", error);
+      console.error("Error fetching quiz adata:", error);
     }
   };
 
   useEffect(() => {
     fetchQuizData();
   }, []);
- const handleDeleteQuiz = async (id) => {
-   try {
-     await deleteDoc(doc(db, "quizzes", id));
-     Alert.alert("Success", "Quiz deleted successfully");
-     await fetchQuizData(); // Refresh the quiz list after deletion
-   } catch (error) {
-     console.error("Error deleting quiz:", error);
-     Alert.alert("Error", "An error occurred while deleting the quiz");
-   }
- };
+  // console.log(quizData)
+  const handleDeleteQuiz = async (id) => {
+    try {
+      await deleteDoc(doc(db, "quizzes", id));
+      Alert.alert("Success", "Quiz deleted successfully");
+      await fetchQuizData(); // Refresh the quiz list after deletion
+    } catch (error) {
+      console.error("Error deleting quiz:", error);
+      Alert.alert("Error", "An error occurred while deleting the quiz");
+    }
+  };
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchQuizData();
     setRefreshing(false);
   };
 
- const renderQuizItem = ({ item }) => (
-   <TouchableOpacity
-     onPress={() =>
-       navigation.navigate("AdminQuizScreen", {
-         quizId: item.id,
-         title: item.quizTitle,
-       })
-     }
-     style={styles.item}
-   >
-     <Text style={styles.title}>{item.quizTitle}</Text>
-     <View style={styles.iconsHolder}>
-       <TouchableOpacity onPress={() => console.log("clicked edit icon")}>
-         <MaterialCommunityIcons
-           name="pencil"
-           size={30}
-           color={colors.secondary}
-         />
-       </TouchableOpacity>
-       <TouchableOpacity onPress={() => handleDeleteQuiz(item.id)}>
-         <MaterialCommunityIcons
-           name="trash-can-outline"
-           size={30}
-           color="red"
-         />
-       </TouchableOpacity>
-     </View>
-   </TouchableOpacity>
- );
+  const renderQuizItem = ({ item }) => (
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("AdminQuizScreen", {
+          quizId: item.id,
+          title: item.quizTitle,
+          questions: item.questions
+          
+        })
+        // navigation.navigate("AdminQuizScreen", {
+        //   title: "Docker 101",
+        //   id:1,
+        //   questions: [
+        //     {
+        //       text: "What is docker?",
+        //       options: ["Option 1", "Option 2", "Option 3", "Option 4"],
+        //       correctAnswer: "3",
+        //     },
+        //     {
+        //       text: "What is an image?",
+        //       options: ["Option A", "Option B", "Option C", "Option D"],
+        //       correctAnswer: "2",
+        //     },
+        //   ],
+        // })
+        
+      }
+      style={styles.item}
+    >
+      <Text style={styles.title}>{item.quizTitle}</Text>
+      <View style={styles.iconsHolder}>
+        <TouchableOpacity onPress={() => console.log("clicked edit icon")}>
+          <MaterialCommunityIcons
+            name="pencil"
+            size={30}
+            color={colors.secondary}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDeleteQuiz(item.id)}>
+          <MaterialCommunityIcons
+            name="trash-can-outline"
+            size={30}
+            color="red"
+          />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
   return (
     <Screen style={styles.container}>
       <FlatList
@@ -92,6 +114,8 @@ console.log(quizData.quizTitle)
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
+      {/* <CreateQuizTest/> */}
+      {/* <SQLiteTestComponent/> */}
     </Screen>
   );
 }
@@ -110,8 +134,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 5,
     flex: 1,
-    flexDirection:"row",
-    alignItems:"center"
+    flexDirection: "row",
+    alignItems: "center",
   },
   title: {
     color: colors.white,
@@ -139,4 +163,3 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
-

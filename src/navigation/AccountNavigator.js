@@ -9,13 +9,21 @@ import colors from "../config/colors";
 import AppText from "../components/AppText";
 import QuizNavigator from "./QuizNavigator";
 import { useUser } from "../context/UserContext";
+import { signOut } from "@firebase/auth";
+import { auth } from "../../firebase";
 
 const Tab = createBottomTabNavigator();
 export default function AppNavigator() {
-      const { setUser } = useUser();
-      const handleLogout = () => {
-        setUser(null); // Clear the user context
-      };
+  const { setUser } = useUser();
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Sign out the user
+      setUser(null); // Clear the user context
+      // navigation.navigate('Login'); // Navigate to the login screen
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
   return (
     <Tab.Navigator
       screenOptions={{
@@ -52,14 +60,18 @@ export default function AppNavigator() {
           ),
         }}
       />
-       <Tab.Screen
+      <Tab.Screen
         name="Logout"
         component={WelcomeScreen}
         options={({ navigation }) => ({
           tabBarButton: () => (
             <TouchableOpacity onPress={() => handleLogout()}>
               <View style={styles.logout}>
-                <MaterialCommunityIcons name="logout" size={22} color={colors.light} />
+                <MaterialCommunityIcons
+                  name="logout"
+                  size={22}
+                  color={colors.light}
+                />
                 <AppText style={styles.logoutText}>Logout</AppText>
               </View>
             </TouchableOpacity>
@@ -77,14 +89,14 @@ const styles = StyleSheet.create({
   logout: {
     flex: 1,
     alignItems: "center",
-    justifyContent:"flex-end",
+    justifyContent: "flex-end",
     gap: 5,
     paddingRight: 50,
     paddingLeft: 50,
-    backgroundColor:colors.bg
+    backgroundColor: colors.bg,
   },
   logoutText: {
     color: colors.light,
-    fontSize: 10
-  }
-})
+    fontSize: 10,
+  },
+});

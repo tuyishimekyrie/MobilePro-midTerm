@@ -17,7 +17,8 @@ import { UserProvider } from "./src/context/UserContext";
 import { UserContext } from "./src/context/UserContext";
 
 function App() {
-  const { user } = useContext(UserContext); // Access user and role from context
+  // Access user and role from context
+  const { user } = useContext(UserContext); 
   console.log(user);
   // Render navigation based on user authentication status and role
   return (

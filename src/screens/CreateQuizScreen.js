@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,8 +14,36 @@ import { SubmitButton, AppForm, AppFormField } from "../components/forms";
 import { useNavigation } from "@react-navigation/native";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
+import * as SQLite from "expo-sqlite";
+
+// Open SQLite database
+const dbSQLite = SQLite.openDatabase("myDatabase.db");
 
 export default function CreateQuizScreen() {
+  const dbSQLite = SQLite.openDatabase("myDatabase.db");
+
+  // Open SQLite database and create table if not exists
+  // dbSQLite.transaction(
+  //   (tx) => {
+  //     tx.executeSql(
+  //       `
+  //       CREATE TABLE IF NOT EXISTS Quiz (
+  //         id INTEGER PRIMARY KEY AUTOINCREMENT,
+  //         quizTitle TEXT,
+  //         numberOfQuestions INTEGER,
+  //         questions TEXT
+  //       );
+  //     `
+  //     );
+  //   },
+  //   (error) => {
+  //     console.error('Error creating Quizzes table:', error);
+  //   },
+  //   () => {
+  //     console.log('Quizzes table created successfully');
+  //   }
+  // );
+
   const navigation = useNavigation();
   const defaultQuestion = { text: "", options: ["", ""], correctAnswer: "" };
   const [quizData, setQuizData] = useState({
@@ -86,16 +114,64 @@ export default function CreateQuizScreen() {
     }));
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     console.log(quizData);
     // Logic to submit quiz data to Firestore or wherever needed
     try {
       // Add quizData to Firestore
       const docRef = await addDoc(collection(db, "quizzes"), {
         ...quizData,
-        createdAt: serverTimestamp() // Add timestamp when the quiz is created
+        createdAt: serverTimestamp(), // Add timestamp when the quiz is created
       });
       console.log("Quiz added with ID: ", docRef.id);
+      // Insert quizData into SQLite
+      // dbSQLite.transaction(
+      //   (tx) => {
+      //     tx.executeSql(
+      //       `
+      //         INSERT INTO Quiz (quizTitle, numberOfQuestions, questions) VALUES (?, ?, ?);
+      //       `,
+      //       [quizData.quizTitle, quizData.numberOfQuestions, JSON.stringify(quizData.questions)],
+      //       (_, result) => {
+      //         console.log('Quiz data inserted into SQLite');
+      //       },
+      //       (_, error) => {
+      //         console.error('Error inserting quiz data into SQLite:', error);
+      //         return true; // Return true to rollback the transaction
+      //       }
+      //     );
+      //   },
+      //   null, // Error callback
+      //   () => {
+      //     console.log('Transaction completed successfully');
+      //   }
+      // );
+      dbSQLite.transaction(
+        (tx) => {
+          tx.executeSql(
+            `
+                  INSERT INTO Quiz (id, quizTitle, numberOfQuestions, questions) VALUES (NULL, ?, ?, ?);
+                `,
+            [
+              quizData.quizTitle,
+              quizData.numberOfQuestions,
+              JSON.stringify(quizData.questions),
+            ],
+            (_, result) => {
+              console.log("Quiz data inserted into SQLite");
+            },
+            (_, error) => {
+              console.error("Error inserting quiz data into SQLite:", error);
+              return true; // Return true to rollback the transaction
+            }
+          );
+        },
+        null, // Error callback
+        () => {
+          console.log("Transaction completed successfully");
+        }
+      );
+
       navigation.navigate("AdminQuizList"); // Navigate to the list of quizzes after adding
     } catch (error) {
       console.error("Error adding quiz: ", error);
