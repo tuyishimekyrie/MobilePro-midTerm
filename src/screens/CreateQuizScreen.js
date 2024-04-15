@@ -6,21 +6,26 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
+  Alert,
 } from "react-native";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import colors from "../config/colors";
 import { SubmitButton, AppForm, AppFormField } from "../components/forms";
 import { useNavigation } from "@react-navigation/native";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  serverTimestamp,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../../firebase";
+import * as MailComposer from "expo-mail-composer";
 import * as SQLite from "expo-sqlite";
 
-// Open SQLite database
-const dbSQLite = SQLite.openDatabase("myDatabase.db");
-
 export default function CreateQuizScreen() {
-  const dbSQLite = SQLite.openDatabase("myDatabase.db");
+  // const dbSQLite = SQLite.openDatabase("myDatabase.db");
+  const [recipients, setRecipients] = useState([]);
 
   // Open SQLite database and create table if not exists
   // dbSQLite.transaction(
@@ -114,6 +119,52 @@ export default function CreateQuizScreen() {
     }));
   };
 
+  useEffect(() => {
+    fetchRecipients();
+  }, []);
+  const fetchRecipients = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "users"));
+      const fetchedRecipients = querySnapshot.docs.map(
+        (doc) => doc.data().email
+      );
+      setRecipients(fetchedRecipients);
+    } catch (error) {
+      console.error("Error fetching recipients: ", error);
+    }
+  };
+
+  const sendEmail = async () => {
+    const emailSubject = "New Quiz";
+    const emailBody = "New Quiz Available";
+
+    try {
+      const { status } = await MailComposer.composeAsync({
+        recipients: recipients,
+        subject: emailSubject,
+        body: emailBody,
+      });
+
+      if (status === "sent") {
+        console.log("Email sent successfully!");
+        Alert.alert(
+          "Success",
+          "Emails sent successfully!",
+          [
+            {
+              text: "OK",
+              onPress: () => console.log("OK Pressed"),
+              style: "cancel",
+            },
+          ],
+          { cancelable: false }
+        );
+      }
+    } catch (error) {
+      console.error("Error sending email: ", error);
+    }
+  };
+
   const handleSubmit = async () => {
     console.log(quizData);
     // Logic to submit quiz data to Firestore or wherever needed
@@ -146,32 +197,33 @@ export default function CreateQuizScreen() {
       //     console.log('Transaction completed successfully');
       //   }
       // );
-      dbSQLite.transaction(
-        (tx) => {
-          tx.executeSql(
-            `
-                  INSERT INTO Quiz (id, quizTitle, numberOfQuestions, questions) VALUES (NULL, ?, ?, ?);
-                `,
-            [
-              quizData.quizTitle,
-              quizData.numberOfQuestions,
-              JSON.stringify(quizData.questions),
-            ],
-            (_, result) => {
-              console.log("Quiz data inserted into SQLite");
-            },
-            (_, error) => {
-              console.error("Error inserting quiz data into SQLite:", error);
-              return true; // Return true to rollback the transaction
-            }
-          );
-        },
-        null, // Error callback
-        () => {
-          console.log("Transaction completed successfully");
-        }
-      );
+      // dbSQLite.transaction(
+      //   (tx) => {
+      //     tx.executeSql(
+      //       `
+      //             INSERT INTO Quiz (id, quizTitle, numberOfQuestions, questions) VALUES (NULL, ?, ?, ?);
+      //           `,
+      //       [
+      //         quizData.quizTitle,
+      //         quizData.numberOfQuestions,
+      //         JSON.stringify(quizData.questions),
+      //       ],
+      //       (_, result) => {
+      //         console.log("Quiz data inserted into SQLite");
+      //       },
+      //       (_, error) => {
+      //         console.error("Error inserting quiz data into SQLite:", error);
+      //         return true; // Return true to rollback the transaction
+      //       }
+      //     );
+      //   },
+      //   null, // Error callback
+      //   () => {
+      //     console.log("Transaction completed successfully");
+      //   }
+      // );
 
+      sendEmail();
       navigation.navigate("AdminQuizList"); // Navigate to the list of quizzes after adding
     } catch (error) {
       console.error("Error adding quiz: ", error);

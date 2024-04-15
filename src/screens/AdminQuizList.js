@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  ActivityIndicator, // Import ActivityIndicator
 } from "react-native";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
@@ -20,11 +21,12 @@ import CreateQuizTest from "../components/createQuizTest";
 export default function AdminQuizList() {
   const navigation = useNavigation();
   const [quizData, setQuizData] = useState([]);
+  const [loading, setLoading] = useState(false); // Add loading state
   const [refreshing, setRefreshing] = useState(false);
-  // console.log(quizData)
-  // console.log(quizData[0].questions[0].options);
+
   const fetchQuizData = async () => {
     try {
+      setLoading(true); // Set loading state to true while fetching data
       const querySnapshot = await getDocs(collection(db, "quizzes"));
       const fetchedQuizData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -32,14 +34,19 @@ export default function AdminQuizList() {
       }));
       setQuizData(fetchedQuizData);
     } catch (error) {
-      console.error("Error fetching quiz adata:", error);
+      console.error("Error fetching quiz data:", error);
+    } finally {
+      // Set loading state to false after fetch completes
+      setLoading(false);
+      // Set refreshing state to false after fetch completes
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchQuizData();
   }, []);
-  // console.log(quizData)
+
   const handleDeleteQuiz = async (id) => {
     try {
       await deleteDoc(doc(db, "quizzes", id));
@@ -50,10 +57,10 @@ export default function AdminQuizList() {
       Alert.alert("Error", "An error occurred while deleting the quiz");
     }
   };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchQuizData();
-    setRefreshing(false);
   };
 
   const renderQuizItem = ({ item }) => (
@@ -62,26 +69,8 @@ export default function AdminQuizList() {
         navigation.navigate("AdminQuizScreen", {
           quizId: item.id,
           title: item.quizTitle,
-          questions: item.questions
-          
+          questions: item.questions,
         })
-        // navigation.navigate("AdminQuizScreen", {
-        //   title: "Docker 101",
-        //   id:1,
-        //   questions: [
-        //     {
-        //       text: "What is docker?",
-        //       options: ["Option 1", "Option 2", "Option 3", "Option 4"],
-        //       correctAnswer: "3",
-        //     },
-        //     {
-        //       text: "What is an image?",
-        //       options: ["Option A", "Option B", "Option C", "Option D"],
-        //       correctAnswer: "2",
-        //     },
-        //   ],
-        // })
-        
       }
       style={styles.item}
     >
@@ -104,8 +93,10 @@ export default function AdminQuizList() {
       </View>
     </TouchableOpacity>
   );
+
   return (
     <Screen style={styles.container}>
+      {loading && <ActivityIndicator color={"#fff"} size={30} />}
       <FlatList
         data={quizData}
         renderItem={renderQuizItem}
@@ -114,11 +105,10 @@ export default function AdminQuizList() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
-      {/* <CreateQuizTest/> */}
-      {/* <SQLiteTestComponent/> */}
     </Screen>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

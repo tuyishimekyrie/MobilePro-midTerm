@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet } from "react-native";
-import React from "react";
+import { View, Text, StyleSheet,Button } from "react-native";
+import React,{useEffect} from "react";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     backgroundColor: colors.bg,
+    paddingTop:25
   },
   wordWrapper: {
     // flex: 1,

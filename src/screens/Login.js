@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from "react";
-import { StyleSheet, Text } from "react-native";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Screen from "../components/Screen";
 import { signInWithEmailAndPassword,onAuthStateChanged } from "@firebase/auth";
@@ -19,9 +19,11 @@ const validationSchema = Yup.object().shape({
 const Login = () => {
   const navigation = useNavigation();
   const [error, setError] = useState("");
-  const { user,setUser } = useUser();
+  const { user, setUser } = useUser();
+  const [loading, setLoading] = useState(false);
   const handlePressLogIn = async (values) => {
     try {
+      setLoading(true)
       const { user: authUser } = await signInWithEmailAndPassword(
         auth,
         values.email,
@@ -30,6 +32,7 @@ const Login = () => {
       console.log(values);
       // console.log(user);
       setError("");
+      setLoading(false);
 
       // try {
       //   const userRef = db.collection("users").doc(user.uid);
@@ -117,7 +120,11 @@ const Login = () => {
           secureTextEntry
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <SubmitButton title="Log In" style={{ marginTop: 45 }} />
+        {loading ? (
+          <ActivityIndicator  size={"large"} color={"white"}/>
+        ) : (
+          <SubmitButton title="Log In " style={{ marginTop: 45 }} />
+        )}
       </AppForm>
     </Screen>
   );

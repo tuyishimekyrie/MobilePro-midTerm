@@ -11,6 +11,7 @@ import QuizNavigator from "./QuizNavigator";
 import { useUser } from "../context/UserContext";
 import { signOut } from "@firebase/auth";
 import { auth } from "../../firebase";
+import Scores from "../screens/Scores";
 
 const Tab = createBottomTabNavigator();
 export default function AppNavigator() {
@@ -47,6 +48,20 @@ export default function AppNavigator() {
         }}
       />
       <Tab.Screen
+        name="Scores"
+        component={Scores}
+        options={{
+          headerShown: false,
+          headerStyle: {
+            backgroundColor: colors.bg,
+          },
+          headerTintColor: colors.white,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="medal" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Profile"
         component={Profile}
         options={{
@@ -60,6 +75,7 @@ export default function AppNavigator() {
           ),
         }}
       />
+
       <Tab.Screen
         name="Logout"
         component={WelcomeScreen}
@@ -91,8 +107,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 5,
-    paddingRight: 50,
-    paddingLeft: 50,
+    paddingRight:25,
+    paddingLeft: 20,
     backgroundColor: colors.bg,
   },
   logoutText: {

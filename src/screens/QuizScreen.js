@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import colors from "../config/colors";
 import CheckBox from "expo-checkbox";
 import WelcomeBtn from "../components/button/welcome";
@@ -14,11 +21,14 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { UserContext } from "../context/UserContext";
-
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { FontAwesome5 } from "@expo/vector-icons";
 const QuizScreen = ({ route }) => {
+  const [loadingModal, setLoadingModal] = useState(false);
   const { id, title } = route.params;
   const { user } = useContext(UserContext); // Access user and role from context
-  console.log(user);
+  console.log("user", user);
+  console.log("user_id", user?.uid || user?.user?.uid);
   const navigation = useNavigation();
 
   const [questions, setQuestions] = useState([]);
@@ -81,8 +91,10 @@ const QuizScreen = ({ route }) => {
 
   const handleCloseModal = async () => {
     // Assuming you have a way to get the current user ID (e.g., currentUser.uid)
-    const userId = user.uid; // Replace currentUser.uid with actual user ID
+    const userId = user?.uid || user?.user?.uid; // Replace currentUser.uid with actual user ID
+    console.log(userId);
     try {
+      setLoadingModal(true);
       // Add the score to the "scores" collection
       await addDoc(collection(db, "scores"), {
         userId: userId,
@@ -93,6 +105,8 @@ const QuizScreen = ({ route }) => {
       console.log("Score added successfully!");
     } catch (error) {
       console.error("Error adding score:", error);
+    } finally {
+      setLoadingModal(false); // Set loading back to false after the operation completes
     }
     setIsModalVisible(false);
     navigation.navigate("QuizList");
@@ -100,18 +114,29 @@ const QuizScreen = ({ route }) => {
 
   if (loading || questions.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.loading}>Loading...</Text>
+      <View style={[styles.loader]}>
+        <Text style={styles.loading}>Loading Data from server</Text>
+        <ActivityIndicator
+          size="large"
+          color="#f1f5f9"
+          style={styles.loading}
+        />
       </View>
     );
   }
-
+  if (loadingModal) {
+    console.log("Heloo");
+  }
+  console.log(questions);
   return (
     <View style={styles.container}>
+      <Text style={styles.questionHeading}>
+        Questions {currentQuestionIndex + 1} / {questions.length}
+      </Text>
       <Text style={styles.title}>{title}</Text>
       {currentQuestion ? (
         <>
-          <Text style={styles.question}>{currentQuestion.question}</Text>
+          <Text style={styles.question}>{currentQuestion.text}</Text>
           {currentQuestion.options.map((option, index) => (
             <View key={index} style={styles.optionContainer}>
               <CheckBox
@@ -136,12 +161,19 @@ const QuizScreen = ({ route }) => {
           >
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
-                <Text style={styles.modalText}>You scored {score}!</Text>
+                <FontAwesome5 name="award" size={50} color="#eab308" />
+                <Text style={styles.titles}>{title}</Text>
+                <Text style={styles.modalText}>
+                  You scored {score} Out Of {questions.length}!
+                </Text>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={handleCloseModal}
                 >
-                  <Text style={styles.closeButtonText}>Close</Text>
+                  <Text style={styles.closeButtonText}>
+                    {" "}
+                    {loadingModal ? <ActivityIndicator /> : "Close"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -160,25 +192,42 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
     padding: 20,
   },
-  loading:{
-    textAlign:"center",
+  titles: {
+    color: "#1e40af",
+    fontSize: 24,
+    flexWrap: "wrap",
+  },
+  loader: {
+    backgroundColor: colors.bg,
+    flex: 1,
+    gap: 5,
+    // flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loading: {
+    textAlign: "center",
     color: "#fff",
-    fontSize:20
+    fontSize: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: colors.white,
-    marginBottom: 20,
+    marginBottom: 10,
+  },
+  questionHeading: {
+    color: "#3b82f6",
+    marginBottom: 10,
   },
   question: {
     fontSize: 18,
     color: colors.white,
-    marginBottom: 20,
+    marginBottom: 30,
   },
   optionContainer: {
     flexDirection: "row",
-    marginBottom: 10,
+    marginBottom: 20,
     alignItems: "center",
   },
   checkbox: {
@@ -195,7 +244,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
@@ -203,6 +252,7 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 20,
     marginBottom: 20,
+    marginTop: 10,
   },
   closeButton: {
     backgroundColor: colors.primary,

@@ -5,57 +5,70 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator
 } from "react-native";
+import {
+  query, // Import query function
+  orderBy, // Import orderBy function
+} from "firebase/firestore";
+
 import Screen from "../components/Screen";
 import colors from "../config/colors";
+import { RefreshControl } from "react-native";
+
 import { useNavigation } from "@react-navigation/native";
 import { collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
+import AppText from "../components/AppText";
 
 export default function QuizList() {
   const navigation = useNavigation();
   const [quizData, setQuizData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    // Enable offline persistence
-    // async function enableOfflinePersistence() {
-    //   await setPersistenceEnabled(true);
-    // }
-    // enableOfflinePersistence();
-
-    const fetchQuizData = async () => {
-      try {
-        // Get initial data
-        const initialSnapshot = await getDocs(collection(db, "quizzes"));
-        const fetchedQuizData = initialSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          title: doc.data().quizTitle,
-        }));
-        setQuizData(fetchedQuizData);
-
-        // Listen for real-time updates
-        const unsubscribe = onSnapshot(
-          collection(db, "quizzes"),
-          (snapshot) => {
-            const updatedQuizData = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              title: doc.data().quizTitle,
-            }));
-            setQuizData(updatedQuizData);
-          }
-        );
-
-        return unsubscribe;
-      } catch (error) {
-        console.error("Error fetching quiz data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchQuizData();
   }, []);
+const fetchQuizData = async () => {
+  try {
+    setRefreshing(true);
+
+    // Query quizzes collection ordered by createdAt field in descending order
+    const querySnapshot = await getDocs(
+      query(collection(db, "quizzes"), orderBy("createdAt", "desc"))
+    );
+
+    const fetchedQuizData = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      title: doc.data().quizTitle,
+    }));
+
+    setQuizData(fetchedQuizData);
+
+    const unsubscribe = onSnapshot(collection(db, "quizzes"), (snapshot) => {
+      const updatedQuizData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        title: doc.data().quizTitle,
+      }));
+
+      setQuizData(updatedQuizData);
+    });
+
+    return unsubscribe;
+  } catch (error) {
+    console.error("Error fetching quiz data:", error);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchQuizData();
+    setRefreshing(false);
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -70,19 +83,33 @@ export default function QuizList() {
 
   if (loading) {
     return (
-      <Screen style={styles.container}>
-        <Text style={styles.loading}>Loading...</Text>
-      </Screen>
+      <View style={styles.loader}>
+        <Text style={styles.loading}>Loading Data from server</Text>
+        <ActivityIndicator
+          size="large"
+          color="#f1f5f9"
+          style={styles.loading}
+        />
+      </View>
     );
   }
 
   return (
     <Screen style={styles.container}>
+      <AppText style={styles.list}>List Of Quizzes</AppText>
       <FlatList
         data={quizData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.flatListContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#1e40af"]}
+            tintColor="#fff"
+          />
+        }
       />
     </Screen>
   );
@@ -93,12 +120,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
     justifyContent: "center",
-    color: "#fff"
+    color: "#fff",
   },
-  loading:{
-    color:"#fff",
-    fontSize:15,
+  list: {
+    color: "#fff",
     textAlign:"center"
+  },
+  loader: {
+    backgroundColor: colors.bg,
+    flex: 1,
+    gap: 5,
+    // flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loading: {
+    color: "#fff",
+    fontSize: 15,
+    textAlign: "center",
   },
   flatListContent: {
     paddingVertical: 10,

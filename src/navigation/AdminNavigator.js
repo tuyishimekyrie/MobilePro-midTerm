@@ -10,6 +10,7 @@ import AdminQuizList from "../screens/AdminQuizList";
 import CreateQuizScreen from "../screens/CreateQuizScreen";
 import AppText from "../components/AppText";
 import QuizAdminNavigator from "./QuizAdminNavigator";
+import SendEmailScreen from "../screens/SendEmailScreen";
 
 
 const Tab = createBottomTabNavigator();
